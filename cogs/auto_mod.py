@@ -42,10 +42,12 @@ class AutoMod(commands.Cog):
 
     async def cog_load(self) -> None:
         self._cleanup_task = asyncio.create_task(self._cleanup_loop())
+        self.bot.tree.add_command(self.automod_group)
 
     def cog_unload(self) -> None:
         if self._cleanup_task:
             self._cleanup_task.cancel()
+        self.bot.tree.remove_command(self.automod_group.name)
 
     # ── Config helpers ──────────────────────────────────────────────────────────
 
