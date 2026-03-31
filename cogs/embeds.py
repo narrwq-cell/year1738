@@ -19,6 +19,8 @@ import importlib.metadata
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 
+BOT_FOOTER = "year1738 Bot"
+
 def _parse_color(hex_str: str, fallback: int = 0x5865F2) -> discord.Color:
     """Parse a hex color string like 'FF5733' or '#FF5733' into a discord.Color."""
     try:
@@ -196,7 +198,7 @@ class Embeds(commands.Cog):
             name=interaction.guild.name,
             icon_url=interaction.guild.icon.url if interaction.guild.icon else None,
         )
-        embed.set_footer(text="Please read and follow all rules.")
+        embed.set_footer(text=f"{BOT_FOOTER}  •  Please read and follow all rules.")
         try:
             await target.send(embed=embed)
         except discord.Forbidden:
@@ -247,6 +249,7 @@ class Embeds(commands.Cog):
             value=", ".join(granted),
             inline=False,
         )
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
 
     # ── /channelinfo ───────────────────────────────────────────────────────────
@@ -285,6 +288,7 @@ class Embeds(commands.Cog):
             )
             embed.add_field(name="NSFW", value="Yes" if ch.is_nsfw() else "No", inline=True)
             embed.add_field(name="News", value="Yes" if ch.is_news() else "No", inline=True)
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
 
     # ── /botinfo ───────────────────────────────────────────────────────────────
@@ -320,7 +324,7 @@ class Embeds(commands.Cog):
         embed.add_field(name="🐍  Python", value=platform.python_version(), inline=True)
         embed.add_field(name="📦  discord.py", value=dpy_version, inline=True)
         embed.add_field(name="🖥️  Platform", value=platform.system(), inline=True)
-        embed.set_footer(text="year1738 Bot")
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.followup.send(embed=embed)
 
 

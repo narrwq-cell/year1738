@@ -4,6 +4,14 @@ from discord.ext import commands
 import datetime
 import database
 
+# Color palette
+_COLOR_PRIMARY = 0x5865F2   # Blurple
+_COLOR_SUCCESS = 0x57F287   # Green
+_COLOR_WARNING = 0xFFA500   # Orange
+_COLOR_ERROR   = 0xED4245   # Red
+
+BOT_FOOTER = "year1738 Bot"
+
 
 class Utilities(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -12,11 +20,25 @@ class Utilities(commands.Cog):
     @app_commands.command(name="ping", description="Check the bot's latency.")
     async def ping(self, interaction: discord.Interaction) -> None:
         latency_ms = round(self.bot.latency * 1000)
+        if latency_ms < 100:
+            indicator = "🟢"
+            color = discord.Color(_COLOR_SUCCESS)
+            quality = "Excellent"
+        elif latency_ms < 200:
+            indicator = "🟡"
+            color = discord.Color(_COLOR_WARNING)
+            quality = "Good"
+        else:
+            indicator = "🔴"
+            color = discord.Color(_COLOR_ERROR)
+            quality = "Poor"
         embed = discord.Embed(
-            title="🏓 Pong!",
-            description=f"Latency: **{latency_ms}ms**",
-            color=discord.Color.green() if latency_ms < 150 else discord.Color.orange(),
+            title="🏓  Pong!",
+            description=f"{indicator}  **{latency_ms} ms** — {quality}",
+            color=color,
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="userinfo", description="Get information about a user.")
@@ -25,42 +47,46 @@ class Utilities(commands.Cog):
         member = member or interaction.user
         stats = database.get_user_stats(member.id, interaction.guild_id)
         roles = [r.mention for r in member.roles if r != interaction.guild.default_role]
+        accent = member.color if member.color.value else discord.Color(_COLOR_PRIMARY)
         embed = discord.Embed(
-            title=f"👤 User Info — {member}",
-            color=member.color,
+            title=f"👤  {member.display_name}",
+            color=accent,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_thumbnail(url=member.display_avatar.url)
+        embed.add_field(name="Username", value=str(member), inline=True)
         embed.add_field(name="ID", value=str(member.id), inline=True)
-        embed.add_field(name="Nickname", value=member.nick or "None", inline=True)
-        embed.add_field(name="Bot", value="Yes" if member.bot else "No", inline=True)
+        embed.add_field(name="Bot", value="✅ Yes" if member.bot else "❌ No", inline=True)
         embed.add_field(
             name="Account Created",
-            value=f"<t:{int(member.created_at.timestamp())}:F>",
-            inline=False,
+            value=f"<t:{int(member.created_at.timestamp())}:R>",
+            inline=True,
         )
         embed.add_field(
             name="Joined Server",
-            value=f"<t:{int(member.joined_at.timestamp())}:F>" if member.joined_at else "Unknown",
-            inline=False,
+            value=f"<t:{int(member.joined_at.timestamp())}:R>" if member.joined_at else "Unknown",
+            inline=True,
         )
+        if member.nick:
+            embed.add_field(name="Nickname", value=member.nick, inline=True)
         embed.add_field(
             name=f"Roles ({len(roles)})",
             value=" ".join(roles[:10]) or "None",
             inline=False,
         )
         if stats:
-            embed.add_field(name="Messages Sent", value=f"{stats['message_count']:,}", inline=True)
-            embed.add_field(name="VC Hours", value=f"{stats['vc_seconds'] / 3600:.1f}h", inline=True)
-            embed.add_field(name="Points", value=f"{stats['points']:,}", inline=True)
+            embed.add_field(name="💬  Messages", value=f"{stats['message_count']:,}", inline=True)
+            embed.add_field(name="🎙️  VC Time", value=f"{stats['vc_seconds'] / 3600:.1f} h", inline=True)
+            embed.add_field(name="⭐  Points", value=f"{stats['points']:,}", inline=True)
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="serverinfo", description="Get information about the server.")
     async def serverinfo(self, interaction: discord.Interaction) -> None:
         guild = interaction.guild
         embed = discord.Embed(
-            title=f"🏠 Server Info — {guild.name}",
-            color=discord.Color.blurple(),
+            title=f"🏠  {guild.name}",
+            color=discord.Color(_COLOR_PRIMARY),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         if guild.icon:
@@ -69,15 +95,16 @@ class Utilities(commands.Cog):
         embed.add_field(name="ID", value=str(guild.id), inline=True)
         embed.add_field(
             name="Created",
-            value=f"<t:{int(guild.created_at.timestamp())}:F>",
-            inline=False,
+            value=f"<t:{int(guild.created_at.timestamp())}:R>",
+            inline=True,
         )
-        embed.add_field(name="Members", value=str(guild.member_count), inline=True)
-        embed.add_field(name="Channels", value=str(len(guild.channels)), inline=True)
-        embed.add_field(name="Roles", value=str(len(guild.roles)), inline=True)
-        embed.add_field(name="Emojis", value=str(len(guild.emojis)), inline=True)
-        embed.add_field(name="Boost Level", value=str(guild.premium_tier), inline=True)
-        embed.add_field(name="Boosts", value=str(guild.premium_subscription_count), inline=True)
+        embed.add_field(name="👥  Members", value=str(guild.member_count), inline=True)
+        embed.add_field(name="📺  Channels", value=str(len(guild.channels)), inline=True)
+        embed.add_field(name="🎭  Roles", value=str(len(guild.roles)), inline=True)
+        embed.add_field(name="😀  Emojis", value=str(len(guild.emojis)), inline=True)
+        embed.add_field(name="🚀  Boost Tier", value=f"Level {guild.premium_tier}", inline=True)
+        embed.add_field(name="💎  Boosts", value=str(guild.premium_subscription_count), inline=True)
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="avatar", description="Get a user's avatar.")
@@ -85,15 +112,17 @@ class Utilities(commands.Cog):
     async def avatar(self, interaction: discord.Interaction, member: discord.Member = None) -> None:
         member = member or interaction.user
         embed = discord.Embed(
-            title=f"🖼️ Avatar — {member.display_name}",
-            color=discord.Color.blurple(),
+            title=f"🖼️  {member.display_name}'s Avatar",
+            color=discord.Color(_COLOR_PRIMARY),
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_image(url=member.display_avatar.url)
         embed.add_field(
-            name="Links",
-            value=f"[PNG]({member.display_avatar.with_format('png').url}) | "
+            name="Download",
+            value=f"[PNG]({member.display_avatar.with_format('png').url}) · "
                   f"[WEBP]({member.display_avatar.with_format('webp').url})",
         )
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="membercount", description="Get the server's member count.")
@@ -103,12 +132,14 @@ class Utilities(commands.Cog):
         humans = sum(1 for m in guild.members if not m.bot)
         bots = total - humans
         embed = discord.Embed(
-            title=f"👥 Member Count — {guild.name}",
-            color=discord.Color.green(),
+            title=f"👥  Member Count",
+            description=f"**{guild.name}** currently has **{total:,}** members.",
+            color=discord.Color(_COLOR_SUCCESS),
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
-        embed.add_field(name="Total", value=str(total), inline=True)
-        embed.add_field(name="Humans", value=str(humans), inline=True)
-        embed.add_field(name="Bots", value=str(bots), inline=True)
+        embed.add_field(name="👤  Humans", value=f"**{humans:,}**", inline=True)
+        embed.add_field(name="🤖  Bots", value=f"**{bots:,}**", inline=True)
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="embed", description="Create a custom embed message.")
@@ -136,7 +167,7 @@ class Utilities(commands.Cog):
         try:
             color_int = int(color.lstrip("#"), 16)
         except ValueError:
-            color_int = 0x5865F2
+            color_int = _COLOR_PRIMARY
         embed = discord.Embed(
             title=title,
             description=description,
@@ -160,7 +191,7 @@ class Utilities(commands.Cog):
         embed = discord.Embed(
             title="📖  year1738 Bot — Help",
             description="Here are all available slash commands:",
-            color=discord.Color.blurple(),
+            color=discord.Color(_COLOR_PRIMARY),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         if interaction.guild and interaction.guild.icon:
@@ -204,7 +235,7 @@ class Utilities(commands.Cog):
             value="`/joke` `/8ball` `/dice` `/flip` `/random`",
             inline=False,
         )
-        embed.set_footer(text="year1738 Bot • All commands are slash commands")
+        embed.set_footer(text=f"{BOT_FOOTER}  •  All commands are slash commands")
         await interaction.response.send_message(embed=embed)
 
 

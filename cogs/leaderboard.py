@@ -4,7 +4,8 @@ from discord.ext import commands
 import datetime
 import database
 
-EMBED_COLOR = discord.Color.gold()
+EMBED_COLOR = discord.Color(0x5865F2)  # Discord Blurple
+BOT_FOOTER = "year1738 Bot"
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 
@@ -94,7 +95,7 @@ class Leaderboard(commands.Cog):
             if description_lines
             else f"*{subtitle}*\n\nNo data yet! Start chatting or joining voice channels."
         )
-        embed.set_footer(text=f"Top {limit} members • {guild.name}")
+        embed.set_footer(text=f"{BOT_FOOTER}  •  Top {limit} members  •  {guild.name}")
         await interaction.followup.send(embed=embed)
 
     # ── /rank ──────────────────────────────────────────────────────────────────
@@ -162,7 +163,7 @@ class Leaderboard(commands.Cog):
             inline=False,
         )
 
-        embed.set_footer(text=f"Joined server: {member.joined_at.strftime('%b %d, %Y') if member.joined_at else 'unknown'}")
+        embed.set_footer(text=f"{BOT_FOOTER}  •  Joined: {member.joined_at.strftime('%b %d, %Y') if member.joined_at else 'unknown'}")
         await interaction.followup.send(embed=embed)
 
 

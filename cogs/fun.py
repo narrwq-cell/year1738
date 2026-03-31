@@ -4,6 +4,7 @@ from discord.ext import commands
 import random
 import datetime
 
+BOT_FOOTER = "year1738 Bot"
 
 JOKES = [
     ("Why don't scientists trust atoms?", "Because they make up everything! 😄"),
@@ -33,6 +34,16 @@ MAGIC_8_BALL = [
     "Outlook not so good.", "Very doubtful.",
 ]
 
+_8BALL_POSITIVE = frozenset([
+    "It is certain.", "It is decidedly so.", "Without a doubt.", "Yes, definitely.",
+    "You may rely on it.", "As I see it, yes.", "Most likely.", "Outlook good.",
+    "Yes.", "Signs point to yes.",
+])
+_8BALL_NEUTRAL = frozenset([
+    "Reply hazy, try again.", "Ask again later.", "Better not tell you now.",
+    "Cannot predict now.", "Concentrate and ask again.",
+])
+
 
 class Fun(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -42,31 +53,37 @@ class Fun(commands.Cog):
     async def joke(self, interaction: discord.Interaction) -> None:
         setup_text, punchline = random.choice(JOKES)
         embed = discord.Embed(
-            title="😂 Random Joke",
-            color=discord.Color.yellow(),
+            title="😂  Random Joke",
+            color=discord.Color(0xFEE75C),
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.add_field(name="Setup", value=setup_text, inline=False)
         embed.add_field(name="Punchline", value=f"||{punchline}||", inline=False)
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="8ball", description="Ask the magic 8-ball a question.")
     @app_commands.describe(question="Your yes/no question")
     async def eightball(self, interaction: discord.Interaction, question: str) -> None:
         answer = random.choice(MAGIC_8_BALL)
-        positive = ["It is certain.", "It is decidedly so.", "Without a doubt.",
-                    "Yes, definitely.", "You may rely on it.", "As I see it, yes.",
-                    "Most likely.", "Outlook good.", "Yes.", "Signs point to yes."]
-        neutral = ["Reply hazy, try again.", "Ask again later.", "Better not tell you now.",
-                   "Cannot predict now.", "Concentrate and ask again."]
-        if answer in positive:
-            color = discord.Color.green()
-        elif answer in neutral:
-            color = discord.Color.orange()
+        if answer in _8BALL_POSITIVE:
+            color = discord.Color(0x57F287)   # Green
+            outlook = "🟢 Positive"
+        elif answer in _8BALL_NEUTRAL:
+            color = discord.Color(0xFFA500)   # Orange
+            outlook = "🟡 Neutral"
         else:
-            color = discord.Color.red()
-        embed = discord.Embed(title="🎱 Magic 8-Ball", color=color)
-        embed.add_field(name="Question", value=question, inline=False)
-        embed.add_field(name="Answer", value=answer, inline=False)
+            color = discord.Color(0xED4245)   # Red
+            outlook = "🔴 Negative"
+        embed = discord.Embed(
+            title="🎱  Magic 8-Ball",
+            color=color,
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
+        )
+        embed.add_field(name="❓  Question", value=question, inline=False)
+        embed.add_field(name="🔮  Answer", value=f"*{answer}*", inline=False)
+        embed.add_field(name="Outlook", value=outlook, inline=True)
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="dice", description="Roll a die.")
@@ -75,25 +92,31 @@ class Fun(commands.Cog):
         sides = max(2, min(sides, 1000))
         count = max(1, min(count, 10))
         rolls = [random.randint(1, sides) for _ in range(count)]
+        dice_display = "  ".join(f"**{r}**" for r in rolls)
         embed = discord.Embed(
-            title=f"🎲 Rolling {count}d{sides}",
-            color=discord.Color.blurple(),
+            title=f"🎲  Roll {count}d{sides}",
+            color=discord.Color(0x5865F2),
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
-        embed.add_field(name="Rolls", value=" | ".join(str(r) for r in rolls), inline=False)
+        embed.add_field(name="Rolls", value=dice_display, inline=False)
         if count > 1:
-            embed.add_field(name="Total", value=str(sum(rolls)), inline=True)
-            embed.add_field(name="Average", value=f"{sum(rolls) / count:.1f}", inline=True)
+            embed.add_field(name="Total", value=f"**{sum(rolls)}**", inline=True)
+            embed.add_field(name="Average", value=f"**{sum(rolls) / count:.1f}**", inline=True)
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="flip", description="Flip a coin.")
     async def flip(self, interaction: discord.Interaction) -> None:
         result = random.choice(["Heads", "Tails"])
-        emoji = "🪙" if result == "Heads" else "🔄"
+        result_emoji = "🌝" if result == "Heads" else "🌚"
+        color = discord.Color(0xFEE75C) if result == "Heads" else discord.Color(0x2C2F33)
         embed = discord.Embed(
-            title=f"{emoji} Coin Flip",
-            description=f"**{result}!**",
-            color=discord.Color.gold(),
+            title="🪙  Coin Flip",
+            description=f"{result_emoji}  **{result}!**",
+            color=color,
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
+        embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="random", description="Generate a random number.")
@@ -108,11 +131,12 @@ class Fun(commands.Cog):
             return
         result = random.randint(minimum, maximum)
         embed = discord.Embed(
-            title="🎰 Random Number",
+            title="🎰  Random Number",
             description=f"**{result}**",
-            color=discord.Color.purple(),
+            color=discord.Color(0x5865F2),
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
-        embed.set_footer(text=f"Range: {minimum} — {maximum}")
+        embed.set_footer(text=f"{BOT_FOOTER}  •  Range: {minimum} — {maximum}")
         await interaction.response.send_message(embed=embed)
 
 
