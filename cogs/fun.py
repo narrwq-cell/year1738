@@ -54,7 +54,7 @@ class Fun(commands.Cog):
         setup_text, punchline = random.choice(JOKES)
         embed = discord.Embed(
             title="😂  Random Joke",
-            color=discord.Color(0xFEE75C),
+            color=discord.Color.from_rgb(0, 0, 0),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.add_field(name="Setup", value=setup_text, inline=False)
@@ -66,14 +66,12 @@ class Fun(commands.Cog):
     @app_commands.describe(question="Your yes/no question")
     async def eightball(self, interaction: discord.Interaction, question: str) -> None:
         answer = random.choice(MAGIC_8_BALL)
+        color = discord.Color.from_rgb(0, 0, 0)
         if answer in _8BALL_POSITIVE:
-            color = discord.Color(0x57F287)   # Green
             outlook = "🟢 Positive"
         elif answer in _8BALL_NEUTRAL:
-            color = discord.Color(0xFFA500)   # Orange
             outlook = "🟡 Neutral"
         else:
-            color = discord.Color(0xED4245)   # Red
             outlook = "🔴 Negative"
         embed = discord.Embed(
             title="🎱  Magic 8-Ball",
@@ -95,7 +93,7 @@ class Fun(commands.Cog):
         dice_display = "  ".join(f"**{r}**" for r in rolls)
         embed = discord.Embed(
             title=f"🎲  Roll {count}d{sides}",
-            color=discord.Color(0x5865F2),
+            color=discord.Color.from_rgb(0, 0, 0),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.add_field(name="Rolls", value=dice_display, inline=False)
@@ -109,11 +107,10 @@ class Fun(commands.Cog):
     async def flip(self, interaction: discord.Interaction) -> None:
         result = random.choice(["Heads", "Tails"])
         result_emoji = "🌝" if result == "Heads" else "🌚"
-        color = discord.Color(0xFEE75C) if result == "Heads" else discord.Color(0x2C2F33)
         embed = discord.Embed(
             title="🪙  Coin Flip",
             description=f"{result_emoji}  **{result}!**",
-            color=color,
+            color=discord.Color.from_rgb(0, 0, 0),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_footer(text=BOT_FOOTER)
@@ -133,7 +130,7 @@ class Fun(commands.Cog):
         embed = discord.Embed(
             title="🎰  Random Number",
             description=f"**{result}**",
-            color=discord.Color(0x5865F2),
+            color=discord.Color.from_rgb(0, 0, 0),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_footer(text=f"{BOT_FOOTER}  •  Range: {minimum} — {maximum}")

@@ -8,16 +8,16 @@ import database
 
 logger = logging.getLogger("year1738.moderation")
 
-# Action-specific colors
+# Action colors unified to black for minimalistic design
 _ACTION_COLORS = {
-    "ban":    0xED4245,  # Red
-    "unban":  0x57F287,  # Green
-    "kick":   0xFFA500,  # Orange
-    "warn":   0xFEE75C,  # Yellow
-    "mute":   0x00B0F4,  # Blue
-    "unmute": 0x57F287,  # Green
+    "ban":    0x000000,
+    "unban":  0x000000,
+    "kick":   0x000000,
+    "warn":   0x000000,
+    "mute":   0x000000,
+    "unmute": 0x000000,
 }
-_DEFAULT_MOD_COLOR = 0x5865F2  # Blurple fallback
+_DEFAULT_MOD_COLOR = 0x000000  # Black
 
 BOT_FOOTER = "year1738 Bot"
 
@@ -219,7 +219,7 @@ class Moderation(commands.Cog):
         rows = database.get_warnings(interaction.guild_id, member.id)
         embed = discord.Embed(
             title=f"⚠️ Warnings — {member}",
-            color=discord.Color(0xFEE75C),
+            color=discord.Color.from_rgb(0, 0, 0),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_thumbnail(url=member.display_avatar.url)

@@ -21,7 +21,7 @@ import importlib.metadata
 
 BOT_FOOTER = "year1738 Bot"
 
-def _parse_color(hex_str: str, fallback: int = 0x5865F2) -> discord.Color:
+def _parse_color(hex_str: str, fallback: int = 0x000000) -> discord.Color:
     """Parse a hex color string like 'FF5733' or '#FF5733' into a discord.Color."""
     try:
         return discord.Color(int(hex_str.lstrip("#"), 16))
@@ -80,7 +80,7 @@ class Embeds(commands.Cog):
         title: str,
         description: str,
         channel: discord.TextChannel = None,
-        color: str = "F0B232",
+        color: str = "000000",
         thumbnail: str = None,
         image: str = None,
         footer: str = None,
@@ -134,7 +134,7 @@ class Embeds(commands.Cog):
         interaction: discord.Interaction,
         message: str,
         channel: discord.TextChannel = None,
-        color: str = "5865F2",
+        color: str = "000000",
         title: str = None,
     ) -> None:
         target = channel or interaction.channel
@@ -170,7 +170,7 @@ class Embeds(commands.Cog):
         interaction: discord.Interaction,
         rules: str,
         channel: discord.TextChannel = None,
-        color: str = "5865F2",
+        color: str = "000000",
         title: str = "📜  Server Rules",
     ) -> None:
         target = channel or interaction.channel
@@ -229,7 +229,7 @@ class Embeds(commands.Cog):
 
         embed = discord.Embed(
             title=f"🎭  Role Info — {role.name}",
-            color=role.color if role.color.value else discord.Color.greyple(),
+            color=discord.Color.from_rgb(0, 0, 0),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
 
@@ -264,7 +264,7 @@ class Embeds(commands.Cog):
         ch = channel or interaction.channel
         embed = discord.Embed(
             title=f"#  Channel Info — {ch.name}",
-            color=discord.Color.blurple(),
+            color=discord.Color.from_rgb(0, 0, 0),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.add_field(name="ID", value=str(ch.id), inline=True)
@@ -312,7 +312,7 @@ class Embeds(commands.Cog):
         embed = discord.Embed(
             title=f"🤖  {self.bot.user.name}",
             description="A feature-rich Discord bot for moderation, fun, and community management.",
-            color=discord.Color.blurple(),
+            color=discord.Color.from_rgb(0, 0, 0),
             timestamp=now,
         )
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
