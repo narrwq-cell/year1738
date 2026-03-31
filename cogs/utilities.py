@@ -116,6 +116,10 @@ class Utilities(commands.Cog):
         title="Embed title",
         description="Embed description",
         color="Hex color (e.g. FF5733)",
+        thumbnail="URL of a small thumbnail image (top-right)",
+        image="URL of a large banner image (bottom)",
+        footer="Custom footer text",
+        author="Author line shown above the title",
     )
     @app_commands.default_permissions(manage_messages=True)
     async def embed(
@@ -124,6 +128,10 @@ class Utilities(commands.Cog):
         title: str,
         description: str,
         color: str = "5865F2",
+        thumbnail: str = None,
+        image: str = None,
+        footer: str = None,
+        author: str = None,
     ) -> None:
         try:
             color_int = int(color.lstrip("#"), 16)
@@ -135,44 +143,64 @@ class Utilities(commands.Cog):
             color=discord.Color(color_int),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
-        embed.set_footer(text=f"Posted by {interaction.user}")
+        if author:
+            embed.set_author(name=author, icon_url=interaction.user.display_avatar.url)
+        if thumbnail:
+            embed.set_thumbnail(url=thumbnail)
+        if image:
+            embed.set_image(url=image)
+        embed.set_footer(
+            text=footer or f"Posted by {interaction.user}",
+            icon_url=interaction.user.display_avatar.url,
+        )
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="help", description="List all available commands.")
     async def help(self, interaction: discord.Interaction) -> None:
         embed = discord.Embed(
-            title="📖 year1738 Bot — Help",
+            title="📖  year1738 Bot — Help",
             description="Here are all available slash commands:",
             color=discord.Color.blurple(),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
+        if interaction.guild and interaction.guild.icon:
+            embed.set_thumbnail(url=interaction.guild.icon.url)
+        embed.set_author(
+            name=str(interaction.user),
+            icon_url=interaction.user.display_avatar.url,
+        )
         embed.add_field(
-            name="⚙️ Moderation",
+            name="⚙️  Moderation",
             value="`/ban` `/kick` `/warn` `/warnings` `/clearwarnings` `/mute` `/unmute` `/clear` `/unban`",
             inline=False,
         )
         embed.add_field(
-            name="📊 Leaderboards",
-            value="`/leaderboard hours` `/leaderboard messages` `/leaderboard points`",
+            name="📊  Leaderboards",
+            value="`/leaderboard hours` `/leaderboard messages` `/leaderboard points` `/rank`",
             inline=False,
         )
         embed.add_field(
-            name="🎭 React Roles",
+            name="📢  Embeds & Announcements",
+            value="`/announce` `/say` `/rules` `/embed` `/roleinfo` `/channelinfo` `/botinfo`",
+            inline=False,
+        )
+        embed.add_field(
+            name="🎭  React Roles",
             value="`/reactrole` `/removereactrole`",
             inline=False,
         )
         embed.add_field(
-            name="📋 Polls",
+            name="📋  Polls",
             value="`/poll` `/custompoll`",
             inline=False,
         )
         embed.add_field(
-            name="🛠️ Utilities",
-            value="`/ping` `/userinfo` `/serverinfo` `/avatar` `/membercount` `/embed` `/help`",
+            name="🛠️  Utilities",
+            value="`/ping` `/userinfo` `/serverinfo` `/avatar` `/membercount` `/help`",
             inline=False,
         )
         embed.add_field(
-            name="🎉 Fun",
+            name="🎉  Fun",
             value="`/joke` `/8ball` `/dice` `/flip` `/random`",
             inline=False,
         )

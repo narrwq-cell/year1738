@@ -3,6 +3,7 @@ from discord.ext import commands
 import os
 import json
 import logging
+import datetime
 from dotenv import load_dotenv
 import database
 
@@ -26,6 +27,7 @@ COGS = [
     "cogs.polls",
     "cogs.utilities",
     "cogs.fun",
+    "cogs.embeds",
 ]
 
 
@@ -34,6 +36,7 @@ class Year1738Bot(commands.Bot):
         intents = discord.Intents.all()
         super().__init__(command_prefix=config.get("prefix", "!"), intents=intents)
         self.config = config
+        self.start_time = None
 
     async def setup_hook(self):
         database.setup_database()
@@ -47,6 +50,7 @@ class Year1738Bot(commands.Bot):
         logger.info("Slash commands synced.")
 
     async def on_ready(self):
+        self.start_time = self.start_time or datetime.datetime.now(datetime.timezone.utc)
         logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
         await self.change_presence(
             activity=discord.Activity(

@@ -387,3 +387,67 @@ def log_poll(
     conn.commit()
     conn.close()
 
+
+# ── Rank queries ───────────────────────────────────────────────────────────────
+
+def get_user_rank_messages(guild_id: int, user_id: int) -> int:
+    """Return 1-based rank for message_count. Returns total+1 if user has no data."""
+    conn = get_connection()
+    row = conn.execute(
+        """SELECT COUNT(*) + 1 AS rank FROM user_stats
+           WHERE guild_id = ? AND message_count > COALESCE(
+               (SELECT message_count FROM user_stats WHERE guild_id = ? AND user_id = ?), -1
+           )""",
+        (guild_id, guild_id, user_id),
+    ).fetchone()
+    conn.close()
+    return row["rank"] if row else 1
+
+
+def get_user_rank_hours(guild_id: int, user_id: int) -> int:
+    """Return 1-based rank for vc_seconds."""
+    conn = get_connection()
+    row = conn.execute(
+        """SELECT COUNT(*) + 1 AS rank FROM user_stats
+           WHERE guild_id = ? AND vc_seconds > COALESCE(
+               (SELECT vc_seconds FROM user_stats WHERE guild_id = ? AND user_id = ?), -1
+           )""",
+        (guild_id, guild_id, user_id),
+    ).fetchone()
+    conn.close()
+    return row["rank"] if row else 1
+
+
+def get_user_rank_points(guild_id: int, user_id: int) -> int:
+    """Return 1-based rank for points."""
+    conn = get_connection()
+    row = conn.execute(
+        """SELECT COUNT(*) + 1 AS rank FROM user_stats
+           WHERE guild_id = ? AND points > COALESCE(
+               (SELECT points FROM user_stats WHERE guild_id = ? AND user_id = ?), -1
+           )""",
+        (guild_id, guild_id, user_id),
+    ).fetchone()
+    conn.close()
+    return row["rank"] if row else 1
+
+
+def get_leaderboard_top_values(guild_id: int) -> dict:
+    """Return the top values for each leaderboard category in a single query."""
+    conn = get_connection()
+    row = conn.execute(
+        """SELECT MAX(message_count) as top_messages,
+                  MAX(vc_seconds) as top_seconds,
+                  MAX(points) as top_points
+           FROM user_stats WHERE guild_id = ?""",
+        (guild_id,),
+    ).fetchone()
+    conn.close()
+    if row is None:
+        return {"top_messages": 0, "top_seconds": 0, "top_points": 0}
+    return {
+        "top_messages": row["top_messages"] or 0,
+        "top_seconds": row["top_seconds"] or 0,
+        "top_points": row["top_points"] or 0,
+    }
+
