@@ -8,29 +8,21 @@ import database
 
 logger = logging.getLogger("year1738.moderation")
 
-# Action colors unified to black for minimalistic design
-_ACTION_COLORS = {
-    "ban":    0x000000,
-    "unban":  0x000000,
-    "kick":   0x000000,
-    "warn":   0x000000,
-    "mute":   0x000000,
-    "unmute": 0x000000,
-}
-_DEFAULT_MOD_COLOR = 0x000000  # Black
+_MOD_COLOR = discord.Color.from_rgb(10, 10, 10)  # Near-black for all mod actions
 
-BOT_FOOTER = "year1738 Bot"
+BOT_FOOTER = "year1738"
 
 
-def _mod_embed(title: str, action: str = "", **fields) -> discord.Embed:
-    color = discord.Color(_ACTION_COLORS.get(action, _DEFAULT_MOD_COLOR))
+def _mod_embed(title: str, member: discord.Member = None, **fields) -> discord.Embed:
     embed = discord.Embed(
         title=title,
-        color=color,
+        color=_MOD_COLOR,
         timestamp=datetime.datetime.now(datetime.timezone.utc),
     )
+    if member is not None:
+        embed.set_thumbnail(url=member.display_avatar.url)
     for name, value in fields.items():
-        embed.add_field(name=name, value=str(value), inline=True)
+        embed.add_field(name=name, value=str(value), inline=False)
     embed.set_footer(text=BOT_FOOTER)
     return embed
 
@@ -89,13 +81,12 @@ class Moderation(commands.Cog):
         await member.ban(reason=f"{reason} | Mod: {interaction.user}", delete_message_days=max(0, min(delete_days, 7)))
         database.log_mod_action(interaction.guild_id, member.id, interaction.user.id, "ban", reason)
         embed = _mod_embed(
-            "🔨 Member Banned",
-            action="ban",
+            "MEMBER BANNED",
+            member=member,
             **{
-                "User": f"{member} ({member.id})",
+                "User": f"**{member}**  ·  `{member.id}`",
                 "Moderator": str(interaction.user),
                 "Reason": reason,
-                "Timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
             }
         )
         await interaction.followup.send(embed=embed)
@@ -129,10 +120,9 @@ class Moderation(commands.Cog):
             return
         database.log_mod_action(interaction.guild_id, uid, interaction.user.id, "unban", reason)
         embed = _mod_embed(
-            "✅ Member Unbanned",
-            action="unban",
+            "MEMBER UNBANNED",
             **{
-                "User": f"{user} ({uid})",
+                "User": f"**{user}**  ·  `{uid}`",
                 "Moderator": str(interaction.user),
                 "Reason": reason,
             }
@@ -164,13 +154,12 @@ class Moderation(commands.Cog):
         await member.kick(reason=f"{reason} | Mod: {interaction.user}")
         database.log_mod_action(interaction.guild_id, member.id, interaction.user.id, "kick", reason)
         embed = _mod_embed(
-            "👢 Member Kicked",
-            action="kick",
+            "MEMBER KICKED",
+            member=member,
             **{
-                "User": f"{member} ({member.id})",
+                "User": f"**{member}**  ·  `{member.id}`",
                 "Moderator": str(interaction.user),
                 "Reason": reason,
-                "Timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
             }
         )
         await interaction.followup.send(embed=embed)
@@ -198,13 +187,13 @@ class Moderation(commands.Cog):
         except discord.Forbidden:
             pass
         embed = _mod_embed(
-            "⚠️ Member Warned",
-            action="warn",
+            "MEMBER WARNED",
+            member=member,
             **{
-                "User": f"{member} ({member.id})",
+                "User": f"**{member}**  ·  `{member.id}`",
                 "Moderator": str(interaction.user),
                 "Reason": reason,
-                "Total Warnings": count,
+                "Total Warnings": f"**{count}**",
             }
         )
         await interaction.followup.send(embed=embed)
@@ -218,18 +207,18 @@ class Moderation(commands.Cog):
     async def warnings(self, interaction: discord.Interaction, member: discord.Member) -> None:
         rows = database.get_warnings(interaction.guild_id, member.id)
         embed = discord.Embed(
-            title=f"⚠️ Warnings — {member}",
-            color=discord.Color.from_rgb(0, 0, 0),
+            title=f"WARNINGS — {member}",
+            color=discord.Color.from_rgb(10, 10, 10),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_thumbnail(url=member.display_avatar.url)
         if not rows:
-            embed.description = "✅ No warnings on record."
+            embed.description = "No warnings on record."
         else:
             for i, row in enumerate(rows, 1):
                 embed.add_field(
-                    name=f"Warning #{i}",
-                    value=f"**Reason:** {row['reason']}\n**Date:** {row['timestamp'][:10]}",
+                    name=f"{i:02d}.",
+                    value=f"**{row['reason']}**\n{row['timestamp'][:10]}",
                     inline=False,
                 )
         embed.set_footer(text=BOT_FOOTER)
@@ -269,10 +258,10 @@ class Moderation(commands.Cog):
         )
         duration_text = f"{duration} minute(s)" if duration > 0 else "permanent"
         embed = _mod_embed(
-            "🔇 Member Muted",
-            action="mute",
+            "MEMBER MUTED",
+            member=member,
             **{
-                "User": f"{member} ({member.id})",
+                "User": f"**{member}**  ·  `{member.id}`",
                 "Moderator": str(interaction.user),
                 "Duration": duration_text,
                 "Reason": reason,
@@ -318,10 +307,10 @@ class Moderation(commands.Cog):
             del self.active_mutes[key]
         database.log_mod_action(interaction.guild_id, member.id, interaction.user.id, "unmute", reason)
         embed = _mod_embed(
-            "🔊 Member Unmuted",
-            action="unmute",
+            "MEMBER UNMUTED",
+            member=member,
             **{
-                "User": f"{member} ({member.id})",
+                "User": f"**{member}**  ·  `{member.id}`",
                 "Moderator": str(interaction.user),
                 "Reason": reason,
             }
