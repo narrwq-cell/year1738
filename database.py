@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import json
 import datetime
 from typing import Optional, List, Tuple
 
@@ -81,6 +82,21 @@ def setup_database() -> None:
             question TEXT NOT NULL,
             creator_id INTEGER NOT NULL,
             created_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS automod_violations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            guild_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            violation_type TEXT NOT NULL,
+            reason TEXT,
+            action_taken TEXT,
+            timestamp TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS automod_settings (
+            guild_id INTEGER NOT NULL PRIMARY KEY,
+            settings TEXT NOT NULL DEFAULT '{}'
         );
     """)
 
@@ -450,4 +466,130 @@ def get_leaderboard_top_values(guild_id: int) -> dict:
         "top_seconds": row["top_seconds"] or 0,
         "top_points": row["top_points"] or 0,
     }
+
+
+# ── Auto-Mod Violations ────────────────────────────────────────────────────────
+
+def add_automod_violation(
+    guild_id: int,
+    user_id: int,
+    violation_type: str,
+    reason: Optional[str] = None,
+    action_taken: Optional[str] = None,
+) -> int:
+    conn = get_connection()
+    cursor = conn.execute(
+        """INSERT INTO automod_violations
+           (guild_id, user_id, violation_type, reason, action_taken, timestamp)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (guild_id, user_id, violation_type, reason, action_taken,
+         datetime.datetime.now(datetime.timezone.utc).isoformat()),
+    )
+    row_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return row_id
+
+
+def get_automod_violations(guild_id: int, user_id: int) -> List[sqlite3.Row]:
+    """Return all automod violations for a user in the last 24 hours."""
+    cutoff = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)).isoformat()
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT * FROM automod_violations
+           WHERE guild_id = ? AND user_id = ? AND timestamp > ?
+           ORDER BY timestamp DESC""",
+        (guild_id, user_id, cutoff),
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def get_automod_violation_count(guild_id: int, user_id: int) -> int:
+    """Return the number of automod violations in the last 24 hours."""
+    cutoff = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)).isoformat()
+    conn = get_connection()
+    count = conn.execute(
+        """SELECT COUNT(*) as cnt FROM automod_violations
+           WHERE guild_id = ? AND user_id = ? AND timestamp > ?""",
+        (guild_id, user_id, cutoff),
+    ).fetchone()["cnt"]
+    conn.close()
+    return count
+
+
+def clean_automod_violations(guild_id: int, user_id: int) -> None:
+    """Remove violations older than 24 hours for a specific user."""
+    cutoff = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)).isoformat()
+    conn = get_connection()
+    conn.execute(
+        "DELETE FROM automod_violations WHERE guild_id = ? AND user_id = ? AND timestamp <= ?",
+        (guild_id, user_id, cutoff),
+    )
+    conn.commit()
+    conn.close()
+
+
+def clean_all_old_automod_violations() -> None:
+    """Remove all automod violations older than 24 hours across all guilds."""
+    cutoff = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)).isoformat()
+    conn = get_connection()
+    conn.execute(
+        "DELETE FROM automod_violations WHERE timestamp <= ?",
+        (cutoff,),
+    )
+    conn.commit()
+    conn.close()
+
+
+def clear_automod_violations(guild_id: int, user_id: int) -> None:
+    """Clear all automod violations for a user in a guild."""
+    conn = get_connection()
+    conn.execute(
+        "DELETE FROM automod_violations WHERE guild_id = ? AND user_id = ?",
+        (guild_id, user_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def update_automod_violation_action(violation_id: int, action_taken: str) -> None:
+    """Update the action_taken field on a violation record."""
+    conn = get_connection()
+    conn.execute(
+        "UPDATE automod_violations SET action_taken = ? WHERE id = ?",
+        (action_taken, violation_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+# ── Auto-Mod Settings ──────────────────────────────────────────────────────────
+
+def get_automod_settings(guild_id: int) -> dict:
+    """Return guild-specific automod settings as a dict."""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT settings FROM automod_settings WHERE guild_id = ?",
+        (guild_id,),
+    ).fetchone()
+    conn.close()
+    if row is None:
+        return {}
+    try:
+        return json.loads(row["settings"])
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
+def set_automod_settings(guild_id: int, settings: dict) -> None:
+    """Persist guild-specific automod settings."""
+    conn = get_connection()
+    conn.execute(
+        """INSERT OR REPLACE INTO automod_settings (guild_id, settings)
+           VALUES (?, ?)""",
+        (guild_id, json.dumps(settings)),
+    )
+    conn.commit()
+    conn.close()
 
