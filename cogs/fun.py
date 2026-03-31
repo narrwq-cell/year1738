@@ -4,24 +4,25 @@ from discord.ext import commands
 import random
 import datetime
 
-BOT_FOOTER = "year1738 Bot"
+BOT_FOOTER = "year1738"
+BLACK = discord.Color.from_rgb(10, 10, 10)
 
 JOKES = [
-    ("Why don't scientists trust atoms?", "Because they make up everything! 😄"),
-    ("Why did the scarecrow win an award?", "Because he was outstanding in his field! 🌾"),
-    ("Why don't eggs tell jokes?", "They'd crack each other up! 🥚"),
-    ("What do you call a fake noodle?", "An impasta! 🍝"),
-    ("Why did the math book look so sad?", "Because it had too many problems. 📚"),
-    ("What do you call a sleeping dinosaur?", "A dino-snore! 🦕"),
-    ("Why did the bicycle fall over?", "Because it was two-tired! 🚲"),
-    ("What do you call cheese that isn't yours?", "Nacho cheese! 🧀"),
-    ("Why can't you give Elsa a balloon?", "Because she'll let it go! 🎈"),
-    ("What's a computer's favorite snack?", "Microchips! 💻"),
-    ("Why do cows wear bells?", "Because their horns don't work! 🐄"),
-    ("What did the ocean say to the beach?", "Nothing, it just waved! 🌊"),
-    ("Why did the golfer bring an extra pair of pants?", "In case he got a hole in one! ⛳"),
-    ("How does a penguin build its house?", "Igloos it together! 🐧"),
-    ("Why can't a nose be 12 inches long?", "Because then it would be a foot! 👃"),
+    ("Why don't scientists trust atoms?", "Because they make up everything!"),
+    ("Why did the scarecrow win an award?", "Because he was outstanding in his field!"),
+    ("Why don't eggs tell jokes?", "They'd crack each other up!"),
+    ("What do you call a fake noodle?", "An impasta!"),
+    ("Why did the math book look so sad?", "Because it had too many problems."),
+    ("What do you call a sleeping dinosaur?", "A dino-snore!"),
+    ("Why did the bicycle fall over?", "Because it was two-tired!"),
+    ("What do you call cheese that isn't yours?", "Nacho cheese!"),
+    ("Why can't you give Elsa a balloon?", "Because she'll let it go!"),
+    ("What's a computer's favorite snack?", "Microchips!"),
+    ("Why do cows wear bells?", "Because their horns don't work!"),
+    ("What did the ocean say to the beach?", "Nothing, it just waved!"),
+    ("Why did the golfer bring an extra pair of pants?", "In case he got a hole in one!"),
+    ("How does a penguin build its house?", "Igloos it together!"),
+    ("Why can't a nose be 12 inches long?", "Because then it would be a foot!"),
 ]
 
 MAGIC_8_BALL = [
@@ -53,8 +54,8 @@ class Fun(commands.Cog):
     async def joke(self, interaction: discord.Interaction) -> None:
         setup_text, punchline = random.choice(JOKES)
         embed = discord.Embed(
-            title="😂  Random Joke",
-            color=discord.Color.from_rgb(0, 0, 0),
+            title="RANDOM JOKE",
+            color=BLACK,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.add_field(name="Setup", value=setup_text, inline=False)
@@ -66,20 +67,19 @@ class Fun(commands.Cog):
     @app_commands.describe(question="Your yes/no question")
     async def eightball(self, interaction: discord.Interaction, question: str) -> None:
         answer = random.choice(MAGIC_8_BALL)
-        color = discord.Color.from_rgb(0, 0, 0)
         if answer in _8BALL_POSITIVE:
-            outlook = "🟢 Positive"
+            outlook = "Positive"
         elif answer in _8BALL_NEUTRAL:
-            outlook = "🟡 Neutral"
+            outlook = "Neutral"
         else:
-            outlook = "🔴 Negative"
+            outlook = "Negative"
         embed = discord.Embed(
-            title="🎱  Magic 8-Ball",
-            color=color,
+            title="MAGIC 8-BALL",
+            color=BLACK,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
-        embed.add_field(name="❓  Question", value=question, inline=False)
-        embed.add_field(name="🔮  Answer", value=f"*{answer}*", inline=False)
+        embed.add_field(name="Question", value=question, inline=False)
+        embed.add_field(name="Answer", value=f"*{answer}*", inline=False)
         embed.add_field(name="Outlook", value=outlook, inline=True)
         embed.set_footer(text=BOT_FOOTER)
         await interaction.response.send_message(embed=embed)
@@ -92,8 +92,8 @@ class Fun(commands.Cog):
         rolls = [random.randint(1, sides) for _ in range(count)]
         dice_display = "  ".join(f"**{r}**" for r in rolls)
         embed = discord.Embed(
-            title=f"🎲  Roll {count}d{sides}",
-            color=discord.Color.from_rgb(0, 0, 0),
+            title=f"ROLL  {count}d{sides}",
+            color=BLACK,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.add_field(name="Rolls", value=dice_display, inline=False)
@@ -106,11 +106,10 @@ class Fun(commands.Cog):
     @app_commands.command(name="flip", description="Flip a coin.")
     async def flip(self, interaction: discord.Interaction) -> None:
         result = random.choice(["Heads", "Tails"])
-        result_emoji = "🌝" if result == "Heads" else "🌚"
         embed = discord.Embed(
-            title="🪙  Coin Flip",
-            description=f"{result_emoji}  **{result}!**",
-            color=discord.Color.from_rgb(0, 0, 0),
+            title="COIN FLIP",
+            description=f"**{result}**",
+            color=BLACK,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_footer(text=BOT_FOOTER)
@@ -123,17 +122,17 @@ class Fun(commands.Cog):
     ) -> None:
         if minimum >= maximum:
             await interaction.response.send_message(
-                "❌ Minimum must be less than maximum.", ephemeral=True
+                "Minimum must be less than maximum.", ephemeral=True
             )
             return
         result = random.randint(minimum, maximum)
         embed = discord.Embed(
-            title="🎰  Random Number",
+            title="RANDOM NUMBER",
             description=f"**{result}**",
-            color=discord.Color.from_rgb(0, 0, 0),
+            color=BLACK,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
-        embed.set_footer(text=f"{BOT_FOOTER}  •  Range: {minimum} — {maximum}")
+        embed.set_footer(text=f"{BOT_FOOTER}  ·  Range: {minimum} — {maximum}")
         await interaction.response.send_message(embed=embed)
 
 

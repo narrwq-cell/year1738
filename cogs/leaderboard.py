@@ -4,8 +4,9 @@ from discord.ext import commands
 import datetime
 import database
 
-EMBED_COLOR = discord.Color.from_rgb(0, 0, 0)  # Black
-BOT_FOOTER = "year1738 Bot"
+EMBED_COLOR = discord.Color.from_rgb(10, 10, 10)  # Near-black
+GOLD = discord.Color.from_rgb(212, 175, 55)        # #D4AF37
+BOT_FOOTER = "year1738"
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 
@@ -37,65 +38,62 @@ class Leaderboard(commands.Cog):
 
         if category == "hours":
             rows = database.get_leaderboard_hours(guild.id, limit)
-            title = "🎙️  Voice Channel Leaderboard"
-            subtitle = "Top members by voice channel time"
+            title = "VOICE HOURS"
             def get_value(row):
                 return row["vc_seconds"]
             def fmt_value(v):
-                return f"{v / 3600:.1f}h"
+                h = v / 3600
+                return f"{h:.1f}h"
             unit = "hours"
         elif category == "messages":
             rows = database.get_leaderboard_messages(guild.id, limit)
-            title = "💬  Message Leaderboard"
-            subtitle = "Top members by messages sent"
+            title = "MESSAGES"
             def get_value(row):
                 return row["message_count"]
             def fmt_value(v):
-                return f"{v:,} msgs"
+                return f"{v:,}"
             unit = "messages"
         else:
             rows = database.get_leaderboard_points(guild.id, limit)
-            title = "⭐  Points Leaderboard"
-            subtitle = "Top members by reputation points"
+            title = "POINTS"
             def get_value(row):
                 return row["points"]
             def fmt_value(v):
-                return f"{v:,} pts"
+                return f"{v:,}"
             unit = "points"
 
-        medals = ["🥇", "🥈", "🥉"]
         top_value = get_value(rows[0]) if rows else 1
 
         embed = discord.Embed(
-            title=title,
+            title=f"— {title} —",
             color=EMBED_COLOR,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
-        embed.description = f"*{subtitle}*\n\u200b"  # italic subtitle + blank spacer
+        embed.set_author(
+            name=guild.name,
+            icon_url=guild.icon.url if guild.icon else None,
+        )
         if guild.icon:
             embed.set_thumbnail(url=guild.icon.url)
-        embed.set_author(name=guild.name,
-                         icon_url=guild.icon.url if guild.icon else None)
 
         description_lines = []
         for i, row in enumerate(rows):
-            medal = medals[i] if i < 3 else f"`#{i + 1}`"
+            rank_str = f"`{i + 1:02d}`"
             member = guild.get_member(row["user_id"])
             name = member.display_name if member else f"Unknown ({row['user_id']})"
             value = get_value(row)
             bar = _progress_bar(value, top_value)
             description_lines.append(
-                f"{medal} **{name}**\n"
-                f"┗ `{bar}` {fmt_value(value)}"
+                f"{rank_str}  **{name}**\n"
+                f"\u00a0\u00a0\u00a0\u00a0`{bar}`  {fmt_value(value)}"
             )
 
-        embed.description = (
-            f"*{subtitle}*\n\u200b\n"
-            + "\n\n".join(description_lines)
-            if description_lines
-            else f"*{subtitle}*\n\nNo data yet! Start chatting or joining voice channels."
-        )
-        embed.set_footer(text=f"{BOT_FOOTER}  •  Top {limit} members  •  {guild.name}")
+        if description_lines:
+            embed.description = "\n\n".join(description_lines)
+        else:
+            embed.description = "*No data yet — start chatting or join a voice channel.*"
+
+        embed.set_footer(text=f"{BOT_FOOTER}  ·  Top {limit}  ·  Most {unit.capitalize()}")
         await interaction.followup.send(embed=embed)
 
     # ── /rank ──────────────────────────────────────────────────────────────────
@@ -110,7 +108,7 @@ class Leaderboard(commands.Cog):
         stats = database.get_user_stats(member.id, guild.id)
         if not stats:
             await interaction.followup.send(
-                f"❌ No activity data found for {member.mention}.", ephemeral=True
+                f"No activity data found for {member.mention}.", ephemeral=True
             )
             return
 
@@ -122,21 +120,24 @@ class Leaderboard(commands.Cog):
         total = guild.member_count or 1
 
         embed = discord.Embed(
-            title=f"📊  Rank Card — {member.display_name}",
-            color=discord.Color.from_rgb(0, 0, 0),
+            title=f"— RANK CARD —",
+            description=f"**{member.display_name}**",
+            color=EMBED_COLOR,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_thumbnail(url=member.display_avatar.url)
-        embed.set_author(name=guild.name,
-                         icon_url=guild.icon.url if guild.icon else None)
+        embed.set_author(
+            name=guild.name,
+            icon_url=guild.icon.url if guild.icon else None,
+        )
 
         # Messages
         msg_bar = _progress_bar(stats["message_count"], tops["top_messages"] or 1)
         embed.add_field(
-            name="💬  Messages",
+            name="MESSAGES",
             value=(
-                f"`{msg_bar}` **{stats['message_count']:,}**\n"
-                f"Rank **#{msg_rank}** of {total:,}"
+                f"`{msg_bar}`\n"
+                f"**{stats['message_count']:,}**  ·  Rank **#{msg_rank}** of {total:,}"
             ),
             inline=False,
         )
@@ -144,10 +145,10 @@ class Leaderboard(commands.Cog):
         # Voice hours
         hrs_bar = _progress_bar(stats["vc_seconds"], tops["top_seconds"] or 1)
         embed.add_field(
-            name="🎙️  Voice Time",
+            name="VOICE TIME",
             value=(
-                f"`{hrs_bar}` **{stats['vc_seconds'] / 3600:.1f}h**\n"
-                f"Rank **#{hrs_rank}** of {total:,}"
+                f"`{hrs_bar}`\n"
+                f"**{stats['vc_seconds'] / 3600:.1f}h**  ·  Rank **#{hrs_rank}** of {total:,}"
             ),
             inline=False,
         )
@@ -155,15 +156,16 @@ class Leaderboard(commands.Cog):
         # Points
         pts_bar = _progress_bar(stats["points"], tops["top_points"] or 1)
         embed.add_field(
-            name="⭐  Points",
+            name="POINTS",
             value=(
-                f"`{pts_bar}` **{stats['points']:,}**\n"
-                f"Rank **#{pts_rank}** of {total:,}"
+                f"`{pts_bar}`\n"
+                f"**{stats['points']:,}**  ·  Rank **#{pts_rank}** of {total:,}"
             ),
             inline=False,
         )
 
-        embed.set_footer(text=f"{BOT_FOOTER}  •  Joined: {member.joined_at.strftime('%b %d, %Y') if member.joined_at else 'unknown'}")
+        joined = member.joined_at.strftime("%b %d, %Y") if member.joined_at else "unknown"
+        embed.set_footer(text=f"{BOT_FOOTER}  ·  Joined {joined}")
         await interaction.followup.send(embed=embed)
 
 

@@ -3,8 +3,8 @@ from discord import app_commands
 from discord.ext import commands
 import datetime
 
-BOT_FOOTER = "year1738 Bot"
-BLACK = discord.Color.from_rgb(0, 0, 0)
+BOT_FOOTER = "year1738"
+BLACK = discord.Color.from_rgb(10, 10, 10)
 
 
 class Utilities(commands.Cog):
@@ -17,8 +17,8 @@ class Utilities(commands.Cog):
     async def ping(self, interaction: discord.Interaction) -> None:
         latency_ms = round(self.bot.latency * 1000)
         embed = discord.Embed(
-            title="🏓  Pong!",
-            description=f"Latency: **{latency_ms}ms**",
+            title="LATENCY",
+            description=f"**{latency_ms} ms**",
             color=BLACK,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
@@ -35,13 +35,14 @@ class Utilities(commands.Cog):
         member = member or interaction.user
         roles = [r.mention for r in reversed(member.roles) if r.name != "@everyone"]
         embed = discord.Embed(
-            title=f"👤  {member}",
+            title="USER INFO",
+            description=f"**{member}**",
             color=BLACK,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_thumbnail(url=member.display_avatar.url)
-        embed.add_field(name="ID", value=str(member.id), inline=True)
-        embed.add_field(name="Nickname", value=member.nick or "None", inline=True)
+        embed.add_field(name="ID", value=f"`{member.id}`", inline=True)
+        embed.add_field(name="Nickname", value=member.nick or "—", inline=True)
         embed.add_field(name="Bot", value="Yes" if member.bot else "No", inline=True)
         embed.add_field(
             name="Account Created",
@@ -50,12 +51,12 @@ class Utilities(commands.Cog):
         )
         embed.add_field(
             name="Joined Server",
-            value=f"<t:{int(member.joined_at.timestamp())}:F>" if member.joined_at else "Unknown",
+            value=f"<t:{int(member.joined_at.timestamp())}:F>" if member.joined_at else "—",
             inline=False,
         )
         embed.add_field(
-            name=f"Roles ({len(roles)})",
-            value=" ".join(roles) if roles else "None",
+            name=f"Roles  ·  {len(roles)}",
+            value=" ".join(roles) if roles else "—",
             inline=False,
         )
         embed.set_footer(text=BOT_FOOTER)
@@ -69,24 +70,25 @@ class Utilities(commands.Cog):
         text_channels = len(guild.text_channels)
         voice_channels = len(guild.voice_channels)
         embed = discord.Embed(
-            title=f"🏠  {guild.name}",
+            title="SERVER INFO",
+            description=f"**{guild.name}**",
             color=BLACK,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         if guild.icon:
             embed.set_thumbnail(url=guild.icon.url)
-        embed.add_field(name="Owner", value=guild.owner.mention if guild.owner else "Unknown", inline=True)
-        embed.add_field(name="Members", value=str(guild.member_count), inline=True)
-        embed.add_field(name="Roles", value=str(len(guild.roles)), inline=True)
-        embed.add_field(name="Text Channels", value=str(text_channels), inline=True)
-        embed.add_field(name="Voice Channels", value=str(voice_channels), inline=True)
-        embed.add_field(name="Boost Level", value=str(guild.premium_tier), inline=True)
+        embed.add_field(name="Owner", value=guild.owner.mention if guild.owner else "—", inline=True)
+        embed.add_field(name="Members", value=f"**{guild.member_count:,}**", inline=True)
+        embed.add_field(name="Roles", value=f"**{len(guild.roles)}**", inline=True)
+        embed.add_field(name="Text Channels", value=f"**{text_channels}**", inline=True)
+        embed.add_field(name="Voice Channels", value=f"**{voice_channels}**", inline=True)
+        embed.add_field(name="Boost Level", value=f"**{guild.premium_tier}**", inline=True)
         embed.add_field(
             name="Created",
             value=f"<t:{int(guild.created_at.timestamp())}:F>",
             inline=False,
         )
-        embed.set_footer(text=f"{BOT_FOOTER}  •  ID: {guild.id}")
+        embed.set_footer(text=f"{BOT_FOOTER}  ·  ID: {guild.id}")
         await interaction.response.send_message(embed=embed)
 
     # ── /avatar ───────────────────────────────────────────────────────────────
@@ -98,7 +100,8 @@ class Utilities(commands.Cog):
     ) -> None:
         member = member or interaction.user
         embed = discord.Embed(
-            title=f"🖼️  {member}'s Avatar",
+            title="AVATAR",
+            description=f"**{member}**",
             color=BLACK,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
@@ -114,14 +117,14 @@ class Utilities(commands.Cog):
         humans = sum(1 for m in guild.members if not m.bot)
         bots = sum(1 for m in guild.members if m.bot)
         embed = discord.Embed(
-            title="👥  Member Count",
+            title="MEMBER COUNT",
             color=BLACK,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
-        embed.add_field(name="Total", value=str(guild.member_count), inline=True)
-        embed.add_field(name="Humans", value=str(humans), inline=True)
-        embed.add_field(name="Bots", value=str(bots), inline=True)
-        embed.set_footer(text=f"{BOT_FOOTER}  •  {guild.name}")
+        embed.add_field(name="Total", value=f"**{guild.member_count:,}**", inline=True)
+        embed.add_field(name="Humans", value=f"**{humans:,}**", inline=True)
+        embed.add_field(name="Bots", value=f"**{bots:,}**", inline=True)
+        embed.set_footer(text=f"{BOT_FOOTER}  ·  {guild.name}")
         await interaction.response.send_message(embed=embed)
 
     # ── /help ─────────────────────────────────────────────────────────────────
@@ -129,34 +132,33 @@ class Utilities(commands.Cog):
     @app_commands.command(name="help", description="Show all available commands.")
     async def help(self, interaction: discord.Interaction) -> None:
         embed = discord.Embed(
-            title="📋  Command List",
-            description="Here are all available slash commands:",
+            title="COMMANDS",
             color=BLACK,
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.add_field(
-            name="🛠️  Utilities",
-            value="`/ping` `/userinfo` `/serverinfo` `/avatar` `/membercount` `/help`",
+            name="UTILITIES",
+            value="`/ping`  `/userinfo`  `/serverinfo`\n`/avatar`  `/membercount`  `/help`",
             inline=False,
         )
         embed.add_field(
-            name="🎉  Fun",
-            value="`/joke` `/8ball` `/dice` `/flip` `/random`",
+            name="FUN",
+            value="`/joke`  `/8ball`  `/dice`  `/flip`  `/random`",
             inline=False,
         )
         embed.add_field(
-            name="🔨  Moderation",
-            value="`/ban` `/unban` `/kick` `/warn` `/warnings` `/clearwarnings` `/mute` `/unmute` `/clear`",
+            name="MODERATION",
+            value="`/ban`  `/unban`  `/kick`  `/warn`\n`/warnings`  `/clearwarnings`  `/mute`  `/unmute`  `/clear`",
             inline=False,
         )
         embed.add_field(
-            name="📊  Stats",
-            value="`/leaderboard` `/rank`",
+            name="STATS",
+            value="`/leaderboard`  `/rank`",
             inline=False,
         )
         embed.add_field(
-            name="📢  Embeds",
-            value="`/announce` `/say` `/rules` `/roleinfo` `/channelinfo` `/botinfo`",
+            name="EMBEDS",
+            value="`/announce`  `/say`  `/rules`\n`/roleinfo`  `/channelinfo`  `/botinfo`",
             inline=False,
         )
         embed.set_footer(text=BOT_FOOTER)
