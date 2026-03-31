@@ -4,7 +4,7 @@ from discord.ext import commands
 import datetime
 import database
 
-EMBED_COLOR = discord.Color(0x5865F2)  # Discord Blurple
+EMBED_COLOR = discord.Color.from_rgb(0, 0, 0)  # Black
 BOT_FOOTER = "year1738 Bot"
 
 # ── helpers ────────────────────────────────────────────────────────────────────
@@ -123,7 +123,7 @@ class Leaderboard(commands.Cog):
 
         embed = discord.Embed(
             title=f"📊  Rank Card — {member.display_name}",
-            color=member.color if member.color.value else discord.Color.blurple(),
+            color=discord.Color.from_rgb(0, 0, 0),
             timestamp=datetime.datetime.now(datetime.timezone.utc),
         )
         embed.set_thumbnail(url=member.display_avatar.url)
